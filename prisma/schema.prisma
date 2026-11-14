@@ -54,52 +54,67 @@ model Department {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  publicId         String    @unique
-  phone            String    @unique
-  phoneLast4       String
-  email            String?   @unique
-  emailVerifiedAt  DateTime?
-  status           String    @default("pending") // pending | active | limited | suspended | banned | deactivated
-  role             String    @default("user")
-  dob              DateTime
-  gender           String // woman | man
-  genderPreference String   @default("everyone") // women | men | everyone
-  locale           String    @default("bn")
-  verificationLevel Int      @default(0)
-  is18Verified     Boolean   @default(false)
-  universityId     String?
-  campusId         String?
-  departmentId     String?
-  createdAt        DateTime  @default(now())
-  lastActiveAt     DateTime  @default(now())
-  deletedAt        DateTime?
+  id         String @id @default(cuid())
+  publicId   String @unique
+  phone      String @unique
+  phoneLast4 String
 
-  university    University? @relation(fields: [universityId], references: [id])
-  campus        Campus?     @relation(fields: [campusId], references: [id])
-  department    Department? @relation(fields: [departmentId], references: [id])
+  // Account identity. Username and e-mail are also stored encrypted (`*Enc`)
+  // because they are personal data; the `*Lookup` columns hold an HMAC-SHA256
+  // digest (with a pepper) and are the only columns used for equality lookup
+  // and uniqueness, so plaintext never has to be indexed or scanned.
+  username        String    @unique // lowercased handle, safe to show publicly
+  usernameLookup  String    @unique // HMAC(username)
+  usernameEnc     String // AES-256-GCM
+  fullNameEnc     String // AES-256-GCM — never returned to other users
+  emailEnc        String? // AES-256-GCM
+  emailLookup     String?   @unique // HMAC(email)
+  emailVerifiedAt DateTime?
+  addressEnc      String? // AES-256-GCM — city/area only, never shown publicly
+  passwordHash    String? // Argon2id; null when the account uses OTP-only sign-in
+  termsAcceptedAt DateTime?
+  termsVersion    String?
 
-  profile       Profile?
-  preference    Preference?
-  visibility    Visibility?
-  sessions      Session[]
+  status            String    @default("pending") // pending | active | limited | suspended | banned | deactivated
+  role              String    @default("user")
+  dob               DateTime
+  gender            String // woman | man
+  genderPreference  String    @default("everyone") // women | men | everyone
+  locale            String    @default("bn")
+  verificationLevel Int       @default(0)
+  is18Verified      Boolean   @default(false)
+  universityId      String?
+  campusId          String?
+  departmentId      String?
+  createdAt         DateTime  @default(now())
+  lastActiveAt      DateTime  @default(now())
+  deletedAt         DateTime?
 
-  interestsSent     Interest[] @relation("InterestSender")
-  interestsReceived Interest[] @relation("InterestReceiver")
+  university University? @relation(fields: [universityId], references: [id])
+  campus     Campus?     @relation(fields: [campusId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  profile    Profile?
+  preference Preference?
+  visibility Visibility?
+  sessions   Session[]
+
+  interestsSent     Interest[]  @relation("InterestSender")
+  interestsReceived Interest[]  @relation("InterestReceiver")
   shortlist         Shortlist[] @relation("ShortlistOwner")
   shortlistedBy     Shortlist[] @relation("ShortlistTarget")
 
-  matchesA          Match[]    @relation("MatchA")
-  matchesB          Match[]    @relation("MatchB")
-  messages          Message[]
+  matchesA Match[]   @relation("MatchA")
+  matchesB Match[]   @relation("MatchB")
+  messages Message[]
 
-  blocksMade        Block[]    @relation("Blocker")
-  blocksReceived    Block[]    @relation("Blocked")
+  blocksMade     Block[] @relation("Blocker")
+  blocksReceived Block[] @relation("Blocked")
 
-  reportsMade       Report[]   @relation("Reporter")
-  reportsAgainst    Report[]   @relation("Reported")
-  actionsAgainst    ModerationAction[]
-  verifications     VerificationRequest[]
+  reportsMade    Report[]              @relation("Reporter")
+  reportsAgainst Report[]              @relation("Reported")
+  actionsAgainst ModerationAction[]
+  verifications  VerificationRequest[]
 
   @@index([status, lastActiveAt])
   @@index([universityId, gender])
@@ -107,30 +122,30 @@ model User {
 }
 
 model Profile {
-  userId              String   @id
-  displayName         String
-  headline            String?
-  bio                 String?
-  city                String   @default("Dhaka")
-  yearOfStudy         Int?
-  graduationYear      Int?
-  relationshipIntent  String   @default("serious_relationship")
-  religion            String?
-  religionImportance  Int?
-  religionVisibility  String   @default("matches")
-  familyExpectations  String?
-  studyAbroadPlan     String?
-  relocationPlan      String?
-  motherTongue        String   @default("Bangla")
-  smoking             String?
-  drinking            String?
-  diet                String?
-  interestsCsv        String   @default("")
-  completeness        Int      @default(0)
-  photoSeed           String   @default("seed")
-  photoCount          Int      @default(3)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  userId             String   @id
+  displayName        String
+  headline           String?
+  bio                String?
+  city               String   @default("Dhaka")
+  yearOfStudy        Int?
+  graduationYear     Int?
+  relationshipIntent String   @default("serious_relationship")
+  religion           String?
+  religionImportance Int?
+  religionVisibility String   @default("matches")
+  familyExpectations String?
+  studyAbroadPlan    String?
+  relocationPlan     String?
+  motherTongue       String   @default("Bangla")
+  smoking            String?
+  drinking           String?
+  diet               String?
+  interestsCsv       String   @default("")
+  completeness       Int      @default(0)
+  photoSeed          String   @default("seed")
+  photoCount         Int      @default(3)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -153,10 +168,10 @@ model Preference {
 }
 
 model Visibility {
-  userId               String  @id
-  discoverable         Boolean @default(true)
-  hideFromUniversity   Boolean @default(false)
-  showOnline           Boolean @default(false)
+  userId             String  @id
+  discoverable       Boolean @default(true)
+  hideFromUniversity Boolean @default(false)
+  showOnline         Boolean @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -184,8 +199,8 @@ model Interest {
   respondedAt DateTime?
   expiresAt   DateTime
 
-  sender   User    @relation("InterestSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User    @relation("InterestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User   @relation("InterestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User   @relation("InterestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   match    Match?
 
   @@unique([senderId, receiverId])
@@ -194,18 +209,18 @@ model Interest {
 }
 
 model Match {
-  id           String    @id @default(cuid())
-  userAId      String
-  userBId      String
-  interestId   String    @unique
-  status       String    @default("active") // active | unmatched | blocked
-  matchedAt    DateTime  @default(now())
-  endedAt      DateTime?
-  endedReason  String?
+  id          String    @id @default(cuid())
+  userAId     String
+  userBId     String
+  interestId  String    @unique
+  status      String    @default("active") // active | unmatched | blocked
+  matchedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  endedReason String?
 
-  userA       User         @relation("MatchA", fields: [userAId], references: [id], onDelete: Cascade)
-  userB       User         @relation("MatchB", fields: [userBId], references: [id], onDelete: Cascade)
-  interest    Interest     @relation(fields: [interestId], references: [id])
+  userA        User          @relation("MatchA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB        User          @relation("MatchB", fields: [userBId], references: [id], onDelete: Cascade)
+  interest     Interest      @relation(fields: [interestId], references: [id])
   conversation Conversation?
 
   @@unique([userAId, userBId])
@@ -273,9 +288,9 @@ model Report {
   createdAt     DateTime  @default(now())
   resolvedAt    DateTime?
 
-  reporter    User               @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  subject     User               @relation("Reported", fields: [subjectUserId], references: [id], onDelete: Cascade)
-  actions     ModerationAction[]
+  reporter User               @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  subject  User               @relation("Reported", fields: [subjectUserId], references: [id], onDelete: Cascade)
+  actions  ModerationAction[]
 
   @@index([status, priority, slaDueAt])
   @@index([subjectUserId, createdAt])
@@ -395,4 +410,17 @@ model AuditLog {
   @@index([actorType, createdAt])
   @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+// Fixed-window brute-force / abuse counters. The `key` already contains a
+// hashed subject (phone digest, IP digest), so no PII is stored here.
+model RateLimit {
+  key       String   @id
+  bucket    String
+  count     Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([bucket, expiresAt])
+  @@index([expiresAt])
 }

@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:auth": "node scripts/e2e-auth.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",

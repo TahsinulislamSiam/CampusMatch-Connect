@@ -128,3 +128,73 @@ export const MIN_COMPLETENESS = 60;
 export const CAMPUS_ADJACENCY: Record<string, string[]> = {
   dhaka: ["dhaka", "gazipur", "narayanganj"],
 };
+
+/**
+ * Registration handles. A username is the only identity field that is public,
+ * so it must be guessable-free (no phone numbers, no e-mail local parts) and
+ * restricted to the ASCII set that survives URL paths and Bangla keyboards.
+ */
+export const USERNAME_MIN = 3;
+export const USERNAME_MAX = 20;
+export const USERNAME_PATTERN = /^[a-z][a-z0-9_]{2,19}$/;
+
+/** Words that must never become handles: reserved routes and abuse vectors. */
+export const RESERVED_USERNAMES = [
+  "admin",
+  "administrator",
+  "api",
+  "auth",
+  "root",
+  "system",
+  "support",
+  "moderator",
+  "mod",
+  "staff",
+  "help",
+  "security",
+  "login",
+  "logout",
+  "signin",
+  "signup",
+  "register",
+  "onboarding",
+  "settings",
+  "profile",
+  "me",
+  "null",
+  "undefined",
+  "campusmatch",
+  "official",
+  "verified",
+] as const;
+
+/** Current legal documents a user must accept at signup. */
+export const TERMS_VERSION = "2026-01";
+
+export const SESSION_COOKIE = "cm_session";
+export const CSRF_COOKIE = "cm_csrf";
+export const CSRF_HEADER = "x-csrf-token";
+
+/**
+ * Universities a member can register with today. Kept here (not only in mock
+ * data) so the server can validate the choice without importing seed data.
+ * `docs/01-prd.md` AUTH-02: the list is curated, never free text.
+ */
+export const REGISTRATION_UNIVERSITIES = [
+  { id: "du", nameEn: "University of Dhaka", nameBn: "ঢাকা বিশ্ববিদ্যালয়", city: "Dhaka" },
+  { id: "buet", nameEn: "BUET", nameBn: "বাংলাদেশ প্রকৌশল বিশ্ববিদ্যালয়", city: "Dhaka" },
+  { id: "nsu", nameEn: "North South University", nameBn: "নর্থ সাউথ ইউনিভার্সিটি", city: "Dhaka" },
+  { id: "brac", nameEn: "BRAC University", nameBn: "ব্র্যাক ইউনিভার্সিটি", city: "Dhaka" },
+  { id: "ju", nameEn: "Jahangirnagar University", nameBn: "জাহাঙ্গীরনগর বিশ্ববিদ্যালয়", city: "Savar" },
+  { id: "cuet", nameEn: "Chittagong University of Engineering & Technology", nameBn: "চট্টগ্রাম প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয়", city: "Chattogram" },
+  { id: "ruet", nameEn: "Rajshahi University of Engineering & Technology", nameBn: "রাজশাহী প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয়", city: "Rajshahi" },
+  { id: "kuet", nameEn: "Khulna University of Engineering & Technology", nameBn: "খুলনা প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয়", city: "Khulna" },
+  { id: "cu", nameEn: "University of Chittagong", nameBn: "চট্টগ্রাম বিশ্ববিদ্যালয়", city: "Chattogram" },
+  { id: "ru", nameEn: "University of Rajshahi", nameBn: "রাজশাহী বিশ্ববিদ্যালয়", city: "Rajshahi" },
+  { id: "ku", nameEn: "Khulna University", nameBn: "খুলনা বিশ্ববিদ্যালয়", city: "Khulna" },
+  { id: "iub", nameEn: "Independent University Bangladesh", nameBn: "ইন্ডিপেন্ডেন্ট ইউনিভার্সিটি বাংলাদেশ", city: "Dhaka" },
+  { id: "aiub", nameEn: "American International University-Bangladesh", nameBn: "আমেরিকান ইন্টারন্যাশনাল ইউনিভার্সিটি বাংলাদেশ", city: "Dhaka" },
+  { id: "other", nameEn: "Another university", nameBn: "অন্য বিশ্ববিদ্যালয়", city: "" },
+] as const;
+
+export const UNIVERSITY_IDS = REGISTRATION_UNIVERSITIES.map((u) => u.id);

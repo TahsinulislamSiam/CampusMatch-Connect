@@ -391,8 +391,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         verificationLevel: level,
         verificationNote: note ?? null,
         verificationLevels:
+          // Level 0 means "no badge": the key is removed instead of storing a 0,
+          // which keeps the Record<string, 1 | 2 | 3> type honest.
           prev.currentUserId && prev.currentUserId !== "me"
-            ? { ...prev.verificationLevels, [prev.currentUserId]: level }
+            ? level > 0
+              ? { ...prev.verificationLevels, [prev.currentUserId]: level as 1 | 2 | 3 }
+              : Object.fromEntries(
+                  Object.entries(prev.verificationLevels).filter(([id]) => id !== prev.currentUserId)
+                )
             : prev.verificationLevels,
       }));
     },
